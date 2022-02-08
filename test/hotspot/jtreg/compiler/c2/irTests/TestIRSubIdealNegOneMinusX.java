@@ -30,7 +30,7 @@ import compiler.lib.ir_framework.*;
  * @test
  * @summary Test that transformation from -1-x to ~x works as intended.
  * @library /test/lib /
- * @run driver compiler.c2.irTests.TestIRNegOneMinusX
+ * @run driver compiler.c2.irTests.TestIRSubIdealNegOneMinusX
  */
 public class TestIRSubIdealNegOneMinusX {
 
