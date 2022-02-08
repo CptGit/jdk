@@ -322,6 +322,11 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     }
   }
 
+  // Convert "-1-x" into "~x".
+  if (phase->type(in(1)) == TypeInt::MINUS_1) {
+    return new XorINode(in(2), phase->intcon(-1));
+  }
+
   return NULL;
 }
 
