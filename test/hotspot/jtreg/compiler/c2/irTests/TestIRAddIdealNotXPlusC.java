@@ -97,10 +97,10 @@ public class TestIRAddIdealNotXPlusC {
     }
 
     @Test
-    @IR(failOn = {IRNode.ADD_I, IRNode.XOR_I})
-    @IR(counts = {IRNode.SUB_I, "1"})
+    @IR(failOn = {IRNode.ADD_I, IRNode.SUB_I})
+    @IR(counts = {IRNode.XOR_I, "1"})
     public int testIntConIsZero1(int x) {
-        return ~x + 0; // transformed to -1 - x
+        return ~x + 0; // should not happen, transformed to ~x
     }
 
     @Run(test = "testIntConIsZero1")
@@ -123,10 +123,10 @@ public class TestIRAddIdealNotXPlusC {
     }
 
     @Test
-    @IR(failOn = {IRNode.ADD_L, IRNode.XOR_L})
-    @IR(counts = {IRNode.SUB_L, "1"})
+    @IR(failOn = {IRNode.ADD_L, IRNode.SUB_L})
+    @IR(counts = {IRNode.XOR_L, "1"})
     public long testLongConIsZero1(long x) {
-        return ~x + 0L; // transformed to -1 - x
+        return ~x + 0L; // should not happen, transformed to ~x
     }
 
     @Run(test = "testLongConIsZero1")

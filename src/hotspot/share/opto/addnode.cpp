@@ -372,6 +372,7 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
   // will be (x^(-1))+c.
   if (op1 == Op_Xor(bt) &&
       (in2->Opcode() == Op_ConI || in2->Opcode() == Op_ConL) &&
+      phase->type(in2) != TypeInteger::zero(bt) && // exclude c == 0
       phase->type(in1->in(2)) == TypeInteger::minus_1(bt)) {
     Node* c_minus_one = phase->makecon(add_ring(phase->type(in(2)), TypeInteger::minus_1(bt)));
     return SubNode::make(c_minus_one, in1->in(1), bt);
