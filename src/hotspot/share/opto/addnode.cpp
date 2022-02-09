@@ -376,6 +376,15 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
     Node* c_minus_one = phase->makecon(add_ring(phase->type(in(2)), TypeInteger::minus_1(bt)));
     return SubNode::make(c_minus_one, in1->in(1), bt);
   }
+
+  // Convert "(x&y)+(x^y) into "x|y"
+  if (in(1)->Opcode() == Op_And(bt) &&
+      in(2)->Opcode() == Op_Xor(bt) &&
+      in(1)->in(1) == in(2)->in(1) &&
+      in(1)->in(2) == in(2)->in(2)) {
+    return AddNode::make_or(in(1)->in(1), in(1)->in(2), bt);
+  }
+
   return AddNode::Ideal(phase, can_reshape);
 }
 
@@ -743,6 +752,18 @@ Node* OrINode::Identity(PhaseGVN* phase) {
   }
 
   return AddNode::Identity(phase);
+}
+
+AddNode* AddNode::make_or(Node* in1, Node* in2, BasicType bt) {
+  switch (bt) {
+    case T_INT:
+      return new OrINode(in1, in2);
+    case T_LONG:
+      return new OrLNode(in1, in2);
+    default:
+      fatal("Not implemented for %s", type2name(bt));
+  }
+  return NULL;
 }
 
 // Find shift value for Integer or Long OR.

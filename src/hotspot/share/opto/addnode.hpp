@@ -76,6 +76,8 @@ public:
   virtual int min_opcode() const = 0;
 
   static AddNode* make(Node* in1, Node* in2, BasicType bt);
+
+  static AddNode* make_or(Node* in1, Node* in2, BasicType bt);
 };
 
 //------------------------------AddINode---------------------------------------

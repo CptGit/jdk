@@ -1846,6 +1846,7 @@ Op_IL(Mul)
 Op_IL(URShift)
 Op_IL(LShift)
 Op_IL(Xor)
+Op_IL(And)
 Op_IL(Cmp)
 
 inline int Op_Cmp_unsigned(BasicType bt) {
