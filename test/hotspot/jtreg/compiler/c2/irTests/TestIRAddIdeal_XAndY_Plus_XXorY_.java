@@ -31,9 +31,9 @@ import compiler.lib.ir_framework.*;
  * @summary Test that transformation from "(x&y)+(x^y)" to "x|y" works
  *          as intended.
  * @library /test/lib /
- * @run driver compiler.c2.irTests.TestIRSubIdeal_XAndY_Plus_XXorY_
+ * @run driver compiler.c2.irTests.TestIRAddIdeal_XAndY_Plus_XXorY_
  */
-public class TestIRSubIdeal_XAndY_Plus_XXorY_ {
+public class TestIRAddIdeal_XAndY_Plus_XXorY_ {
 
     public static void main(String[] args) {
         TestFramework.run();
