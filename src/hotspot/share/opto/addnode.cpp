@@ -377,9 +377,9 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
     return SubNode::make(c_minus_one, in1->in(1), bt);
   }
 
-  // Convert "(x&y)+(x^y) into "x|y"
-  if (in(1)->Opcode() == Op_And(bt) &&
-      in(2)->Opcode() == Op_Xor(bt) &&
+  // Convert "(x&y)+(x^y)" or "(x^y)+(x&y)" into "x|y"
+  if (((in(1)->Opcode() == Op_And(bt) && in(2)->Opcode() == Op_Xor(bt)) ||
+      (in(1)->Opcode() == Op_Xor(bt) && in(2)->Opcode() == Op_And(bt))) &&
       in(1)->in(1) == in(2)->in(1) &&
       in(1)->in(2) == in(2)->in(2)) {
     return AddNode::make_or(in(1)->in(1), in(1)->in(2), bt);
