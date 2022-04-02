@@ -1229,13 +1229,13 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* p_XURShiftA_URShiftB END */
 
-  /* p__XLShiftZ_PlusY_URShiftZ START */
   // Check for ((x << z) + Y) >>> z.  Replace with x + con>>>z
   // The idiom for rounding to a power of 2 is "(Q+(2^z-1)) >>> z".
   // If Q is "X << z" the rounding is useless.  Look for patterns like
   // ((X<<Z) + Y) >>> Z  and replace with (X + Y>>>Z) & Z-mask.
   Node *add = in(1);
   const TypeInt *t2 = phase->type(in(2))->isa_int();
+  /* p__XLShiftZ_PlusY_URShiftZ START */
   if (in1_op == Op_AddI) {
     Node *lshl = add->in(1);
     if( lshl->Opcode() == Op_LShiftI &&
