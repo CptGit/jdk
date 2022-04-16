@@ -776,19 +776,35 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     return new AndINode(add1->in(1),phase->intcon( -(1<<con)));
   /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 END */
 
-  /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 START */
-  // Check for "((x>>c0) & Y)<<c0" which just masks off more low bits
-  if( add1_op == Op_AndI ) {
-    Node *add2 = add1->in(1);
-    int add2_op = add2->Opcode();
-    if( (add2_op == Op_RShiftI || add2_op == Op_URShiftI ) &&
-        add2->in(2) == in(2) ) {
-      // Convert to "(x & (Y<<c0))"
-      Node *y_sh = phase->transform( new LShiftINode( add1->in(2), in(2) ) );
-      return new AndINode( add2->in(1), y_sh );
-    }
-  }
-  /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in111 = _JOG_in11 != NULL && 1 < _JOG_in11->req() ? _JOG_in11->in(1) : NULL;
+Node* _JOG_in112 = _JOG_in11 != NULL && 2 < _JOG_in11->req() ? _JOG_in11->in(2) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AndI
+    && _JOG_in11->Opcode() == Op_RShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in112 == _JOG_in2) {
+return new AndINode(_JOG_in111, phase->transform(new LShiftINode(_JOG_in12, _JOG_in2)));
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in111 = _JOG_in11 != NULL && 1 < _JOG_in11->req() ? _JOG_in11->in(1) : NULL;
+Node* _JOG_in112 = _JOG_in11 != NULL && 2 < _JOG_in11->req() ? _JOG_in11->in(2) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AndI
+    && _JOG_in11->Opcode() == Op_URShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in112 == _JOG_in2) {
+return new AndINode(_JOG_in111, phase->transform(new LShiftINode(_JOG_in12, _JOG_in2)));
+}
+}
+
 
   /* p_XAndRightNBits_LShiftC0 START */
   // Check for ((x & ((1<<(32-c0))-1)) << c0) which ANDs off high bits
