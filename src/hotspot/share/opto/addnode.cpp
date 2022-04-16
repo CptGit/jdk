@@ -400,24 +400,49 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* pAdd9 END */
 
-  /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym START */
-  // Convert (x >>> rshift) + (x << lshift) into RotateRight(x, rshift)
-  if (Matcher::match_rule_supported(Op_RotateRight) &&
-      ((op1 == Op_URShiftI && op2 == Op_LShiftI) || (op1 == Op_LShiftI && op2 == Op_URShiftI)) &&
-      in1->in(1) != NULL && in1->in(1) == in2->in(1)) {
-    Node* rshift = op1 == Op_URShiftI ? in1->in(2) : in2->in(2);
-    Node* lshift = op1 == Op_URShiftI ? in2->in(2) : in1->in(2);
-    if (rshift != NULL && lshift != NULL) {
-      const TypeInt* rshift_t = phase->type(rshift)->isa_int();
-      const TypeInt* lshift_t = phase->type(lshift)->isa_int();
-      if (lshift_t != NULL && lshift_t->is_con() &&
-          rshift_t != NULL && rshift_t->is_con() &&
-          ((lshift_t->get_con() & 0x1F) == (32 - (rshift_t->get_con() & 0x1F)))) {
-        return new RotateRightNode(in1->in(1), phase->intcon(rshift_t->get_con() & 0x1F), TypeInt::INT);
-      }
-    }
-  }
-  /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (Matcher::match_rule_supported(Op_RotateRight)) {
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_LShiftI
+    && _JOG_in22->Opcode() == Op_ConI
+    && _JOG_in11 == _JOG_in21) {
+jint lshift = phase->type(_JOG_in22)->isa_int()->get_con();
+jint rshift = phase->type(_JOG_in12)->isa_int()->get_con();
+if ((lshift & 31) == (java_subtract(32, (rshift & 31)))) {
+return new RotateRightNode(_JOG_in11, phase->intcon(rshift & 31), TypeInt::INT);
+}
+}
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (Matcher::match_rule_supported(Op_RotateRight)) {
+if (_JOG_in1->Opcode() == Op_LShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_URShiftI
+    && _JOG_in22->Opcode() == Op_ConI
+    && _JOG_in11 == _JOG_in21) {
+jint lshift = phase->type(_JOG_in12)->isa_int()->get_con();
+jint rshift = phase->type(_JOG_in22)->isa_int()->get_con();
+if ((lshift & 31) == (java_subtract(32, (rshift & 31)))) {
+return new RotateRightNode(_JOG_in11, phase->intcon(rshift & 31), TypeInt::INT);
+}
+}
+}
+}
+
 
   /* pAddNotXPlusOne START */
   // Convert (~x+1) into -x. Note there isn't a bitwise not bytecode,
