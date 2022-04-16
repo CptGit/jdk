@@ -286,14 +286,18 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     return new SubINode( in1->in(2), in2->in(1) );
   /* pSub12 END */
 
-  /* pSub13 START */
-  // Convert "A-(B-C)" into (A+C)-B", since add is commutative and generally
-  // nicer to optimize than subtract.
-  if( op2 == Op_SubI && in2->outcnt() == 1) {
-    Node *add1 = phase->transform( new AddINode( in1, in2->in(2) ) );
-    return new SubINode( add1, in2->in(1) );
-  }
-  /* pSub13 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in2->Opcode() == Op_SubI) {
+if (_JOG_in2->outcnt() == 1) {
+return new SubINode(phase->transform(new AddINode(_JOG_in1, _JOG_in22)), _JOG_in21);
+}
+}
+}
+
 
   /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 START */
   // Associative
