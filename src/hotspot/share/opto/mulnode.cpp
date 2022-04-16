@@ -1247,25 +1247,20 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* p__XLShiftZ_PlusY_URShiftZ END */
 
-  /* p_XAndMask_URShiftZ START */
-  // Check for (x & mask) >>> z.  Replace with (x >>> z) & (mask >>> z)
-  // This shortens the mask.  Also, if we are extracting a high byte and
-  // storing it to a buffer, the mask will be removed completely.
-  Node *andi = in(1);
-  if( in1_op == Op_AndI ) {
-    const TypeInt *t3 = phase->type( andi->in(2) )->isa_int();
-    if( t3 && t3->is_con() ) { // Right input is a constant
-      jint mask2 = t3->get_con();
-      mask2 >>= con;  // *signed* shift downward (high-order zeroes do not help)
-      Node *newshr = phase->transform( new URShiftINode(andi->in(1), in(2)) );
-      return new AndINode(newshr, phase->intcon(mask2));
-      // The negative values are easier to materialize than positive ones.
-      // A typical case from address arithmetic is ((x & ~15) >> 4).
-      // It's better to change that to ((x >> 4) & ~0) versus
-      // ((x >> 4) & 0x0FFFFFFF).  The difference is greatest in LP64.
-    }
-  }
-  /* p_XAndMask_URShiftZ END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AndI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint mask = phase->type(_JOG_in12)->isa_int()->get_con();
+jint z = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(phase->transform(new URShiftINode(_JOG_in11, _JOG_in2)), phase->intcon(mask >> z));
+}
+}
+
 
   /* p_XLShiftZ_URShiftZ START */
   // Check for "(X << z ) >>> z" which simply zero-extends
