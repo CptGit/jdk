@@ -751,22 +751,22 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   // Left input is an add of a constant?
   Node *add1 = in(1);
   int add1_op = add1->Opcode();
-  /* p_XPlusCon1_LShiftCon0 START */
-  if( add1_op == Op_AddI ) {    // Left input is an add?
-    assert( add1 != add1->in(1), "dead loop in LShiftINode::Ideal" );
-    const TypeInt *t12 = phase->type(add1->in(2))->isa_int();
-    if( t12 && t12->is_con() ){ // Left input is an add of a con?
-      // Transform is legal, but check for profit.  Avoid breaking 'i2s'
-      // and 'i2b' patterns which typically fold into 'StoreC/StoreB'.
-      if( con < 16 ) {
-        // Compute X << con0
-        Node *lsh = phase->transform( new LShiftINode( add1->in(1), in(2) ) );
-        // Compute X<<con0 + (con1<<con0)
-        return new AddINode( lsh, phase->intcon(t12->get_con() << con));
-      }
-    }
-  }
-  /* p_XPlusCon1_LShiftCon0 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint con0 = phase->type(_JOG_in2)->isa_int()->get_con();
+jint con1 = phase->type(_JOG_in12)->isa_int()->get_con();
+if (con0 < 16) {
+return new AddINode(phase->transform(new LShiftINode(_JOG_in11, _JOG_in2)), phase->intcon(con1 << con0));
+}
+}
+}
+
 
   /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 START */
   // Check for "(x>>c0)<<c0" which just masks off low bits
