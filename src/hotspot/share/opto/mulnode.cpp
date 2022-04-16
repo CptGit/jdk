@@ -1000,20 +1000,20 @@ Node *RShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     return NULL;
   }
 
-  /* p_XAndC0_RShiftC1 START */
-  // Check for (x & 0xFF000000) >> 24, whose mask can be made smaller.
-  // Such expressions arise normally from shift chains like (byte)(x >> 24).
-  const Node *mask = in(1);
-  if( mask->Opcode() == Op_AndI &&
-      (t3 = phase->type(mask->in(2))->isa_int()) &&
-      t3->is_con() ) {
-    Node *x = mask->in(1);
-    jint maskbits = t3->get_con();
-    // Convert to "(x >> shift) & (mask >> shift)"
-    Node *shr_nomask = phase->transform( new RShiftINode(mask->in(1), in(2)) );
-    return new AndINode(shr_nomask, phase->intcon( maskbits >> shift));
-  }
-  /* p_XAndC0_RShiftC1 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AndI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint mask = phase->type(_JOG_in12)->isa_int()->get_con();
+jint shift = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(phase->transform(new RShiftINode(_JOG_in11, _JOG_in2)), phase->intcon(mask >> shift));
+}
+}
+
 
   // Check for "(short[i] <<16)>>16" which simply sign-extends
   const Node *shl = in(1);
