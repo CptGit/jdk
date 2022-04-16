@@ -295,13 +295,33 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return sub;
     }
     /* pAdd2 END */
-    /* pAdd3_pAdd3Sym START */
-    // Convert "(a-b)+(b+c)" into "(a+c)"
-    if( op2 == Op_AddI && in1->in(2) == in2->in(1) ) {
-      assert(in1->in(1) != this && in2->in(2) != this,"dead loop in AddINode::Ideal");
-      return new AddINode(in1->in(1), in2->in(2));
-    }
-    /* pAdd3_pAdd3Sym END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_SubI
+    && _JOG_in2->Opcode() == Op_AddI
+    && _JOG_in12 == _JOG_in21) {
+return new AddINode(_JOG_in11, _JOG_in22);
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in2->Opcode() == Op_SubI
+    && _JOG_in11 == _JOG_in22) {
+return new AddINode(_JOG_in12, _JOG_in21);
+}
+}
+
     /* pAdd4_pAdd4Sym START */
     // Convert "(a-b)+(c+b)" into "(a+c)"
     if( op2 == Op_AddI && in1->in(2) == in2->in(2) ) {
