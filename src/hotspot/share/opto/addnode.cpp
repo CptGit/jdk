@@ -325,11 +325,17 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     /* pAdd6 END */
   }
 
-  /* pAdd7 START */
-  // Convert "x+(0-y)" into "(x-y)"
-  if( op2 == Op_SubI && phase->type(in2->in(1)) == TypeInt::ZERO )
-    return new SubINode(in1, in2->in(2) );
-  /* pAdd7 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in2->Opcode() == Op_SubI
+    && phase->type(_JOG_in21) == TypeInt::ZERO) {
+return new SubINode(_JOG_in1, _JOG_in22);
+}
+}
+
 
   /* pAdd8 START */
   // Convert "(0-y)+x" into "(x-y)"
