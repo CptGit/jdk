@@ -768,13 +768,31 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* p_XPlusCon1_LShiftCon0 END */
 
-  /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 START */
-  // Check for "(x>>c0)<<c0" which just masks off low bits
-  if( (add1_op == Op_RShiftI || add1_op == Op_URShiftI ) &&
-      add1->in(2) == in(2) )
-    // Convert to "(x & -(1<<c0))"
-    return new AndINode(add1->in(1),phase->intcon( -(1<<con)));
-  /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_RShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in12 == _JOG_in2) {
+jint c0 = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(_JOG_in11, phase->intcon(-(1 << c0)));
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in12 == _JOG_in2) {
+jint c0 = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(_JOG_in11, phase->intcon(-(1 << c0)));
+}
+}
+
 
   /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 START */
   // Check for "((x>>c0) & Y)<<c0" which just masks off more low bits
