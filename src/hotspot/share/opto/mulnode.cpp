@@ -1235,17 +1235,22 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   // ((X<<Z) + Y) >>> Z  and replace with (X + Y>>>Z) & Z-mask.
   Node *add = in(1);
   const TypeInt *t2 = phase->type(in(2))->isa_int();
-  /* p__XLShiftZ_PlusY_URShiftZ START */
-  if (in1_op == Op_AddI) {
-    Node *lshl = add->in(1);
-    if( lshl->Opcode() == Op_LShiftI &&
-        phase->type(lshl->in(2)) == t2 ) {
-      Node *y_z = phase->transform( new URShiftINode(add->in(2),in(2)) );
-      Node *sum = phase->transform( new AddINode( lshl->in(1), y_z ) );
-      return new AndINode( sum, phase->intcon(mask) );
-    }
-  }
-  /* p__XLShiftZ_PlusY_URShiftZ END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in111 = _JOG_in11 != NULL && 1 < _JOG_in11->req() ? _JOG_in11->in(1) : NULL;
+Node* _JOG_in112 = _JOG_in11 != NULL && 2 < _JOG_in11->req() ? _JOG_in11->in(2) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in11->Opcode() == Op_LShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in112 == _JOG_in2) {
+jint Z = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(phase->transform(new AddINode(_JOG_in111, phase->transform(new URShiftINode(_JOG_in12, _JOG_in2)))), phase->intcon(java_subtract(1 << java_subtract(32, Z), 1)));
+}
+}
+
 
   /* p_XAndMask_URShiftZ START */
   // Check for (x & mask) >>> z.  Replace with (x >>> z) & (mask >>> z)
