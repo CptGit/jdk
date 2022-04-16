@@ -1267,13 +1267,19 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* p_XAndMask_URShiftZ END */
 
-  /* p_XLShiftZ_URShiftZ START */
-  // Check for "(X << z ) >>> z" which simply zero-extends
-  Node *shl = in(1);
-  if( in1_op == Op_LShiftI &&
-      phase->type(shl->in(2)) == t2 )
-    return new AndINode( shl->in(1), phase->intcon(mask) );
-  /* p_XLShiftZ_URShiftZ END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_LShiftI
+    && _JOG_in2->Opcode() == Op_ConI
+    && _JOG_in12 == _JOG_in2) {
+jint z = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AndINode(_JOG_in11, phase->intcon(java_subtract(1 << java_subtract(32, z), 1)));
+}
+}
+
 
   /* p_XRShiftN_URShift31 START */
   // Check for (x >> n) >>> 31. Replace with (x >>> 31)
