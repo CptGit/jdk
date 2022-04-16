@@ -254,13 +254,21 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   }
   /* pSub7 END */
 
-  /* pSub8 START */
-  // Convert "0 - (x+con)" into "-con-x"
-  jint con;
-  if( t1 == TypeInt::ZERO && op2 == Op_AddI &&
-      (con = in2->in(2)->find_int_con(0)) != 0 )
-    return new SubINode( phase->intcon(-con), in2->in(1) );
-  /* pSub8 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (phase->type(_JOG_in1) == TypeInt::ZERO
+    && _JOG_in2->Opcode() == Op_AddI
+    && _JOG_in22->Opcode() == Op_ConI) {
+jint con = phase->type(_JOG_in22)->isa_int()->get_con();
+if (con != 0) {
+return new SubINode(phase->intcon(-con), _JOG_in21);
+}
+}
+}
+
 
   /* pSub9 START */
   // Convert "(X+A) - (X+B)" into "A - B"
