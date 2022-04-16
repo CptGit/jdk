@@ -240,12 +240,17 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     return new SubINode(phase->intcon(0), in1->in(2));
   }
   /* pSub_XMinusY_MinusX END */
-  /* pSubXMinus_YPlusX_ START */
-  // Convert "x - (y+x)" into "-y"
-  if (op2 == Op_AddI && in1 == in2->in(2)) {
-    return new SubINode(phase->intcon(0), in2->in(1));
-  }
-  /* pSubXMinus_YPlusX_ END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in2->Opcode() == Op_AddI
+    && _JOG_in1 == _JOG_in22) {
+return new SubINode(phase->intcon(0), _JOG_in21);
+}
+}
+
 
   /* pSub7 START */
   // Convert "0 - (x-y)" into "y-x", leave the double negation "-(-y)" to SubNode::Identity().
