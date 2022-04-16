@@ -1215,19 +1215,23 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
 
   int in1_op = in(1)->Opcode();
 
-  /* p_XURShiftA_URShiftB START */
-  // Check for ((x>>>a)>>>b) and replace with (x>>>(a+b)) when a+b < 32
-  if( in1_op == Op_URShiftI ) {
-    const TypeInt *t12 = phase->type( in(1)->in(2) )->isa_int();
-    if( t12 && t12->is_con() ) { // Right input is a constant
-      assert( in(1) != in(1)->in(1), "dead loop in URShiftINode::Ideal" );
-      const int con2 = t12->get_con() & 31; // Shift count is always masked
-      const int con3 = con+con2;
-      if( con3 < 32 )           // Only merge shifts if total is < 32
-        return new URShiftINode( in(1)->in(1), phase->intcon(con3) );
-    }
-  }
-  /* p_XURShiftA_URShiftB END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint a = phase->type(_JOG_in12)->isa_int()->get_con();
+jint b = phase->type(_JOG_in2)->isa_int()->get_con();
+a = a & 31;
+if ((java_add(a, b)) < 32) {
+return new URShiftINode(_JOG_in11, phase->intcon(java_add(a, b)));
+}
+}
+}
+
 
   // Check for ((x << z) + Y) >>> z.  Replace with x + con>>>z
   // The idiom for rounding to a power of 2 is "(Q+(2^z-1)) >>> z".
