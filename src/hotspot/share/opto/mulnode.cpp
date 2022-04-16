@@ -578,14 +578,18 @@ Node *AndINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     }
   }
 
-  /* p_NegX_AndMinus1 START */
-  // Check for 'negate/and-1', a pattern emitted when someone asks for
-  // 'mod 2'.  Negate leaves the low order bit unchanged (think: complement
-  // plus 1) and the mask is of the low order bit.  Skip the negate.
-  if( lop == Op_SubI && mask == 1 && load->in(1) &&
-      phase->type(load->in(1)) == TypeInt::ZERO )
-    return new AndINode( load->in(2), in(2) );
-  /* p_NegX_AndMinus1 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_SubI
+    && phase->type(_JOG_in11) == TypeInt::ZERO
+    && phase->type(_JOG_in2) == TypeInt::ONE) {
+return new AndINode(_JOG_in12, _JOG_in2);
+}
+}
+
 
   return MulNode::Ideal(phase, can_reshape);
 }
