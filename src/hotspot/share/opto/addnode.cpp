@@ -419,15 +419,18 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym END */
 
-  /* pAddNotXPlusOne START */
-  // Convert (~x+1) into -x. Note there isn't a bitwise not bytecode,
-  // "~x" would typically represented as "x^(-1)", so (~x+1) will
-  // be (x^(-1))+1.
-  if (op1 == Op_XorI && phase->type(in2) == TypeInt::ONE &&
-      phase->type(in1->in(2)) == TypeInt::MINUS_1) {
-    return new SubINode(phase->makecon(TypeInt::ZERO), in1->in(1));
-  }
-  /* pAddNotXPlusOne END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_XorI
+    && phase->type(_JOG_in12) == TypeInt::MINUS_1
+    && phase->type(_JOG_in2) == TypeInt::ONE) {
+return new SubINode(phase->intcon(0), _JOG_in11);
+}
+}
+
   return AddNode::Ideal(phase, can_reshape);
 }
 
