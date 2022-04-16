@@ -1275,19 +1275,18 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     return new AndINode( shl->in(1), phase->intcon(mask) );
   /* p_XLShiftZ_URShiftZ END */
 
-  /* p_XRShiftN_URShift31 START */
-  // Check for (x >> n) >>> 31. Replace with (x >>> 31)
-  Node *shr = in(1);
-  if ( in1_op == Op_RShiftI ) {
-    Node *in11 = shr->in(1);
-    Node *in12 = shr->in(2);
-    const TypeInt *t11 = phase->type(in11)->isa_int();
-    const TypeInt *t12 = phase->type(in12)->isa_int();
-    if ( t11 && t2 && t2->is_con(31) && t12 && t12->is_con() ) {
-      return new URShiftINode(in11, phase->intcon(31));
-    }
-  }
-  /* p_XRShiftN_URShift31 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_RShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && phase->type(_JOG_in2)->isa_int()->is_con(31)) {
+return new URShiftINode(_JOG_in11, _JOG_in2);
+}
+}
+
 
   return NULL;
 }
