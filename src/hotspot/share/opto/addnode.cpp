@@ -316,13 +316,20 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return new SubINode(in1->in(1), in2->in(2));
     }
     /* pAdd5 END */
-    /* pAdd6 START */
-    // Convert "(a-b)+(c-a)" into "(c-b)"
-    if( op2 == Op_SubI && in1->in(1) == in2->in(2) ) {
-      assert(in1->in(2) != this && in2->in(1) != this,"dead loop in AddINode::Ideal");
-      return new SubINode(in2->in(1), in1->in(2));
-    }
-    /* pAdd6 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_SubI
+    && _JOG_in2->Opcode() == Op_SubI
+    && _JOG_in11 == _JOG_in22) {
+return new SubINode(_JOG_in21, _JOG_in12);
+}
+}
+
   }
 
   /* pAdd7 START */
