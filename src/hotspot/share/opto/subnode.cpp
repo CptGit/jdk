@@ -201,20 +201,20 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   /* pSub2 END */
 
 
-  /* pSub3 START */
-  // Convert "x - (y+c0)" into "(x-y) - c0"
-  // Need the same check as in above optimization but reversed.
-  if (op2 == Op_AddI && ok_to_convert(in2, in1)) {
-    Node* in21 = in2->in(1);
-    Node* in22 = in2->in(2);
-    const TypeInt* tcon = phase->type(in22)->isa_int();
-    if (tcon != NULL && tcon->is_con()) {
-      Node* sub2 = phase->transform( new SubINode(in1, in21) );
-      Node* neg_c0 = phase->intcon(- tcon->get_con());
-      return new AddINode(sub2, neg_c0);
-    }
-  }
-  /* pSub3 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in2->Opcode() == Op_AddI
+    && _JOG_in22->Opcode() == Op_ConI) {
+jint c0 = phase->type(_JOG_in22)->isa_int()->get_con();
+if (ok_to_convert(_JOG_in2, _JOG_in1)) {
+return new AddINode(phase->transform(new SubINode(_JOG_in1, _JOG_in21)), phase->intcon(-c0));
+}
+}
+}
+
 
   const Type *t1 = phase->type( in1 );
   if( t1 == Type::TOP ) return NULL;
