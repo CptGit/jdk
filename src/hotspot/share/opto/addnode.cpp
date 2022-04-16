@@ -331,11 +331,17 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     return new SubINode(in1, in2->in(2) );
   /* pAdd7 END */
 
-  /* pAdd8 START */
-  // Convert "(0-y)+x" into "(x-y)"
-  if( op1 == Op_SubI && phase->type(in1->in(1)) == TypeInt::ZERO )
-    return new SubINode( in2, in1->in(2) );
-  /* pAdd8 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_SubI
+    && phase->type(_JOG_in11) == TypeInt::ZERO) {
+return new SubINode(_JOG_in2, _JOG_in12);
+}
+}
+
 
   /* pAddAssociative1_pAddAssociative2_pAddAssociative3_pAddAssociative4 START */
   // Associative
