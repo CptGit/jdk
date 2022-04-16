@@ -280,11 +280,20 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     return new SubINode( in1->in(1), in2->in(2) );
   /* pSub11 END */
 
-  /* pSub12 START */
-  // Convert "(X+A) - (B+X)" into "A - B"
-  if( op1 == Op_AddI && op2 == Op_AddI && in1->in(1) == in2->in(2) )
-    return new SubINode( in1->in(2), in2->in(1) );
-  /* pSub12 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in2->Opcode() == Op_AddI
+    && _JOG_in11 == _JOG_in22) {
+return new SubINode(_JOG_in12, _JOG_in21);
+}
+}
+
 
   /* pSub13 START */
   // Convert "A-(B-C)" into (A+C)-B", since add is commutative and generally
