@@ -187,18 +187,20 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   }
   /* pSub1 END */
 
-  /* pSub2 START */
-  // Convert "(x+c0) - y" into (x-y) + c0"
-  // Do not collapse (x+c0)-y if "+" is a loop increment or
-  // if "y" is a loop induction variable.
-  if( op1 == Op_AddI && ok_to_convert(in1, in2) ) {
-    const Type *tadd = phase->type( in1->in(2) );
-    if( tadd->singleton() && tadd != Type::TOP ) {
-      Node *sub2 = phase->transform( new SubINode( in1->in(1), in2 ));
-      return new AddINode( sub2, in1->in(2) );
-    }
-  }
-  /* pSub2 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in12->Opcode() == Op_ConI) {
+jint c0 = phase->type(_JOG_in12)->isa_int()->get_con();
+if (ok_to_convert(_JOG_in1, _JOG_in2)) {
+return new AddINode(phase->transform(new SubINode(_JOG_in11, _JOG_in2)), _JOG_in12);
+}
+}
+}
+
 
 
   /* pSub3 START */
