@@ -790,14 +790,22 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 END */
 
-  /* p_XAndRightNBits_LShiftC0 START */
-  // Check for ((x & ((1<<(32-c0))-1)) << c0) which ANDs off high bits
-  // before shifting them away.
-  const jint bits_mask = right_n_bits(BitsPerJavaInteger-con);
-  if( add1_op == Op_AndI &&
-      phase->type(add1->in(2)) == TypeInt::make( bits_mask ) )
-    return new LShiftINode( add1->in(1), in(2) );
-  /* p_XAndRightNBits_LShiftC0 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_AndI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint c1 = phase->type(_JOG_in12)->isa_int()->get_con();
+jint c0 = phase->type(_JOG_in2)->isa_int()->get_con();
+if (c1 == (java_subtract((1 << (java_subtract(32, c0))), 1))) {
+return new LShiftINode(_JOG_in11, _JOG_in2);
+}
+}
+}
+
 
   return NULL;
 }
