@@ -283,18 +283,19 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     if( t_sub1->singleton() && t_2->singleton() && t_sub1 != Type::TOP && t_2 != Type::TOP )
       return new SubINode(phase->makecon( add_ring( t_sub1, t_2 ) ), in1->in(2) );
     /* pAdd1 END */
-    /* pAdd2 START */
-    // Convert "(a-b)+(c-d)" into "(a+c)-(b+d)"
-    if( op2 == Op_SubI ) {
-      // Check for dead cycle: d = (a-b)+(c-d)
-      assert( in1->in(2) != this && in2->in(2) != this,
-              "dead loop in AddINode::Ideal" );
-      Node *sub  = new SubINode(NULL, NULL);
-      sub->init_req(1, phase->transform(new AddINode(in1->in(1), in2->in(1) ) ));
-      sub->init_req(2, phase->transform(new AddINode(in1->in(2), in2->in(2) ) ));
-      return sub;
-    }
-    /* pAdd2 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_SubI
+    && _JOG_in2->Opcode() == Op_SubI) {
+return new SubINode(phase->transform(new AddINode(_JOG_in11, _JOG_in21)), phase->transform(new AddINode(_JOG_in12, _JOG_in22)));
+}
+}
+
     /* pAdd3_pAdd3Sym START */
     // Convert "(a-b)+(b+c)" into "(a+c)"
     if( op2 == Op_AddI && in1->in(2) == in2->in(1) ) {
