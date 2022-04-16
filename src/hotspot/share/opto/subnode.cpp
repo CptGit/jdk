@@ -268,11 +268,20 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     return new SubINode( in1->in(2), in2->in(2) );
   /* pSub9 END */
 
-  /* pSub10 START */
-  // Convert "(A+X) - (B+X)" into "A - B"
-  if( op1 == Op_AddI && op2 == Op_AddI && in1->in(2) == in2->in(2) )
-    return new SubINode( in1->in(1), in2->in(1) );
-  /* pSub10 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_AddI
+    && _JOG_in2->Opcode() == Op_AddI
+    && _JOG_in12 == _JOG_in22) {
+return new SubINode(_JOG_in11, _JOG_in21);
+}
+}
+
 
   /* pSub11 START */
   // Convert "(A+X) - (X+B)" into "A - B"
