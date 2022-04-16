@@ -331,19 +331,18 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   }
   /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 END */
 
-  /* pSubNegRShiftToURShift START */
-  // Convert "0-(A>>31)" into "(A>>>31)"
-  if ( op2 == Op_RShiftI ) {
-    Node *in21 = in2->in(1);
-    Node *in22 = in2->in(2);
-    const TypeInt *zero = phase->type(in1)->isa_int();
-    const TypeInt *t21 = phase->type(in21)->isa_int();
-    const TypeInt *t22 = phase->type(in22)->isa_int();
-    if ( t21 && t22 && zero == TypeInt::ZERO && t22->is_con(31) ) {
-      return new URShiftINode(in21, in22);
-    }
-  }
-  /* pSubNegRShiftToURShift END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (phase->type(_JOG_in1) == TypeInt::ZERO
+    && _JOG_in2->Opcode() == Op_RShiftI
+    && phase->type(_JOG_in22)->isa_int()->is_con(31)) {
+return new URShiftINode(_JOG_in21, _JOG_in22);
+}
+}
+
 
   return NULL;
 }
