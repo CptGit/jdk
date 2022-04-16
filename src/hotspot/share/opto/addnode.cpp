@@ -1224,18 +1224,16 @@ Node *MinINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   // Force a right-spline graph
   Node *l = in(1);
   Node *r = in(2);
-  /* pMinAssociative START */
-  // Transform  MinI1( MinI2(a,b), c)  into  MinI1( a, MinI2(b,c) )
-  // to force a right-spline graph for the rest of MinINode::Ideal().
-  if( l->Opcode() == Op_MinI ) {
-    assert( l != l->in(1), "dead loop in MinINode::Ideal" );
-    r = phase->transform(new MinINode(l->in(2),r));
-    l = l->in(1);
-    set_req_X(1, l, phase);
-    set_req_X(2, r, phase);
-    return this;
-  }
-  /* pMinAssociative END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_MinI) {
+return new MinINode(_JOG_in11, phase->transform(new MinINode(_JOG_in12, _JOG_in2)));
+}
+}
+
 
   // Get left input & constant
   Node *x = l;
