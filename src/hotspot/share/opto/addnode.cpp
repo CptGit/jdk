@@ -373,32 +373,23 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
   /* pAddAssociative1_pAddAssociative2_pAddAssociative3_pAddAssociative4 END */
 
-  /* pAdd9 START */
-  // Convert (x>>>z)+y into (x+(y<<z))>>>z for small constant z and y.
-  // Helps with array allocation math constant folding
-  // See 4790063:
-  // Unrestricted transformation is unsafe for some runtime values of 'x'
-  // ( x ==  0, z == 1, y == -1 ) fails
-  // ( x == -5, z == 1, y ==  1 ) fails
-  // Transform works for small z and small negative y when the addition
-  // (x + (y << z)) does not cross zero.
-  // Implement support for negative y and (x >= -(y << z))
-  // Have not observed cases where type information exists to support
-  // positive y and (x <= -(y << z))
-  if( op1 == Op_URShiftI && op2 == Op_ConI &&
-      in1->in(2)->Opcode() == Op_ConI ) {
-    jint z = phase->type( in1->in(2) )->is_int()->get_con() & 0x1f; // only least significant 5 bits matter
-    jint y = phase->type( in2 )->is_int()->get_con();
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint z = phase->type(_JOG_in12)->isa_int()->get_con();
+jint y = phase->type(_JOG_in2)->isa_int()->get_con();
+z = z & 0x1f;
+if ((((z < 5) && (-5 < y)) && (y < 0)) && (phase->type(_JOG_in11)->isa_int()->_lo >= (-(y << z)))) {
+return new URShiftINode(phase->transform(new AddINode(_JOG_in11, phase->intcon(y << z))), _JOG_in12);
+}
+}
+}
 
-    if( z < 5 && -5 < y && y < 0 ) {
-      const Type *t_in11 = phase->type(in1->in(1));
-      if( t_in11 != Type::TOP && (t_in11->is_int()->_lo >= -(y << z)) ) {
-        Node *a = phase->transform( new AddINode( in1->in(1), phase->intcon(y<<z) ) );
-        return new URShiftINode( a, in1->in(2) );
-      }
-    }
-  }
-  /* pAdd9 END */
 
   /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym START */
   // Convert (x >>> rshift) + (x << lshift) into RotateRight(x, rshift)
