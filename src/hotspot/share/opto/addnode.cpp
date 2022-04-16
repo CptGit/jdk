@@ -914,17 +914,51 @@ Node* OrINode::Ideal(PhaseGVN* phase, bool can_reshape) {
     return NULL;
   }
   /* p_XLShiftC1_Or_XURShiftC2__p_XLShiftS_Or_XURShift_ConMinusS__ END */
-  /* p_XURShiftC1_Or_XLShiftC2__p_XURShiftS_Or_XLShift_ConMinusS__ START */
-  if (Matcher::match_rule_supported(Op_RotateRight) &&
-      lopcode == Op_URShiftI && ropcode == Op_LShiftI && in(1)->in(1) == in(2)->in(1)) {
-    Node* rshift = in(1)->in(2);
-    Node* lshift = in(2)->in(2);
-    Node* shift = rotate_shift(phase, rshift, lshift, 0x1F);
-    if (shift != NULL) {
-      return new RotateRightNode(in(1)->in(1), shift, TypeInt::INT);
-    }
-  }
-  /* p_XURShiftC1_Or_XLShiftC2__p_XURShiftS_Or_XLShift_ConMinusS__ END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (Matcher::match_rule_supported(Op_RotateRight)) {
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in12->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_LShiftI
+    && _JOG_in22->Opcode() == Op_ConI
+    && _JOG_in11 == _JOG_in21) {
+jint rshift = phase->type(_JOG_in12)->isa_int()->get_con();
+jint lshift = phase->type(_JOG_in22)->isa_int()->get_con();
+if ((rshift & 31) == (java_subtract(32, (lshift & 31)))) {
+return new RotateRightNode(_JOG_in11, phase->intcon(rshift & 31), TypeInt::INT);
+}
+}
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+Node* _JOG_in221 = _JOG_in22 != NULL && 1 < _JOG_in22->req() ? _JOG_in22->in(1) : NULL;
+Node* _JOG_in222 = _JOG_in22 != NULL && 2 < _JOG_in22->req() ? _JOG_in22->in(2) : NULL;
+if (Matcher::match_rule_supported(Op_RotateRight)) {
+if (_JOG_in1->Opcode() == Op_URShiftI
+    && _JOG_in2->Opcode() == Op_LShiftI
+    && _JOG_in22->Opcode() == Op_SubI
+    && _JOG_in221->Opcode() == Op_ConI
+    && _JOG_in11 == _JOG_in21
+    && _JOG_in12 == _JOG_in222) {
+jint con = phase->type(_JOG_in221)->isa_int()->get_con();
+if ((con == 0) || (con == 32)) {
+return new RotateRightNode(_JOG_in11, _JOG_in12, TypeInt::INT);
+}
+}
+}
+}
+
   return NULL;
 }
 
