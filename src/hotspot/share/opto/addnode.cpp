@@ -279,10 +279,20 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   if( op1 == Op_SubI ) {
     const Type *t_sub1 = phase->type( in1->in(1) );
     const Type *t_2    = phase->type( in2        );
-    /* pAdd1 START */
-    if( t_sub1->singleton() && t_2->singleton() && t_sub1 != Type::TOP && t_2 != Type::TOP )
-      return new SubINode(phase->makecon( add_ring( t_sub1, t_2 ) ), in1->in(2) );
-    /* pAdd1 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+if (_JOG_in1->Opcode() == Op_SubI
+    && _JOG_in11->Opcode() == Op_ConI
+    && _JOG_in2->Opcode() == Op_ConI) {
+jint con1 = phase->type(_JOG_in11)->isa_int()->get_con();
+jint con2 = phase->type(_JOG_in2)->isa_int()->get_con();
+return new SubINode(phase->intcon(java_add(con1, con2)), _JOG_in12);
+}
+}
+
     /* pAdd2 START */
     // Convert "(a-b)+(c-d)" into "(a+c)-(b+d)"
     if( op2 == Op_SubI ) {
