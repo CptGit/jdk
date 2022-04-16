@@ -178,14 +178,15 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
 
   const Type *t2 = phase->type( in2 );
   if( t2 == Type::TOP ) return NULL;
-  /* pSub1 START */
-  // Convert "x-c0" into "x+ -c0".
-  if( t2->base() == Type::Int ){        // Might be bottom or top...
-    const TypeInt *i = t2->is_int();
-    if( i->is_con() )
-      return new AddINode(in1, phase->intcon(-i->get_con()));
-  }
-  /* pSub1 END */
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in2 = in(2);
+if (_JOG_in2->Opcode() == Op_ConI) {
+jint c0 = phase->type(_JOG_in2)->isa_int()->get_con();
+return new AddINode(_JOG_in1, phase->intcon(-c0));
+}
+}
+
 
   /* pSub2 START */
   // Convert "(x+c0) - y" into (x-y) + c0"
