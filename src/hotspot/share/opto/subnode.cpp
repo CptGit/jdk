@@ -295,41 +295,59 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   }
   /* pSub13 END */
 
-  /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 START */
-  // Associative
-  if (op1 == Op_MulI && op2 == Op_MulI) {
-    Node* sub_in1 = NULL;
-    Node* sub_in2 = NULL;
-    Node* mul_in = NULL;
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_MulI
+    && _JOG_in2->Opcode() == Op_MulI
+    && _JOG_in11 == _JOG_in21) {
+return new MulINode(_JOG_in11, phase->transform(new SubINode(_JOG_in12, _JOG_in22)));
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_MulI
+    && _JOG_in2->Opcode() == Op_MulI
+    && _JOG_in12 == _JOG_in21) {
+return new MulINode(_JOG_in12, phase->transform(new SubINode(_JOG_in11, _JOG_in22)));
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_MulI
+    && _JOG_in2->Opcode() == Op_MulI
+    && _JOG_in12 == _JOG_in22) {
+return new MulINode(_JOG_in12, phase->transform(new SubINode(_JOG_in11, _JOG_in21)));
+}
+}
+{
+Node* _JOG_in1 = in(1);
+Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+Node* _JOG_in2 = in(2);
+Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+if (_JOG_in1->Opcode() == Op_MulI
+    && _JOG_in2->Opcode() == Op_MulI
+    && _JOG_in11 == _JOG_in22) {
+return new MulINode(_JOG_in11, phase->transform(new SubINode(_JOG_in12, _JOG_in21)));
+}
+}
 
-    if (in1->in(1) == in2->in(1)) {
-      // Convert "a*b-a*c into a*(b-c)
-      sub_in1 = in1->in(2);
-      sub_in2 = in2->in(2);
-      mul_in = in1->in(1);
-    } else if (in1->in(2) == in2->in(1)) {
-      // Convert a*b-b*c into b*(a-c)
-      sub_in1 = in1->in(1);
-      sub_in2 = in2->in(2);
-      mul_in = in1->in(2);
-    } else if (in1->in(2) == in2->in(2)) {
-      // Convert a*c-b*c into (a-b)*c
-      sub_in1 = in1->in(1);
-      sub_in2 = in2->in(1);
-      mul_in = in1->in(2);
-    } else if (in1->in(1) == in2->in(2)) {
-      // Convert a*b-c*a into a*(b-c)
-      sub_in1 = in1->in(2);
-      sub_in2 = in2->in(1);
-      mul_in = in1->in(1);
-    }
-
-    if (mul_in != NULL) {
-      Node* sub = phase->transform(new SubINode(sub_in1, sub_in2));
-      return new MulINode(mul_in, sub);
-    }
-  }
-  /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 END */
 
   /* pSubNegRShiftToURShift START */
   // Convert "0-(A>>31)" into "(A>>>31)"
