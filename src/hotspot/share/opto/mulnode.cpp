@@ -1247,7 +1247,7 @@ if (_JOG_in1->Opcode() == Op_AddI
     && _JOG_in2->Opcode() == Op_ConI
     && _JOG_in112 == _JOG_in2) {
 jint Z = phase->type(_JOG_in2)->isa_int()->get_con();
-return new AndINode(phase->transform(new AddINode(_JOG_in111, phase->transform(new URShiftINode(_JOG_in12, _JOG_in2)))), phase->intcon(java_subtract(1 << java_subtract(32, Z), 1)));
+return new AndINode(phase->transform(new AddINode(_JOG_in111, phase->transform(new URShiftINode(_JOG_in12, _JOG_in2)))), phase->intcon(java_subtract(1 << java_subtract((jint) 32, Z), (jint) 1)));
 }
 }
 
