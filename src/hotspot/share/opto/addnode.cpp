@@ -917,7 +917,7 @@ if (_JOG_in1->Opcode() == Op_LShiftI
     && _JOG_in11 == _JOG_in21) {
 jint lshift = phase->type(_JOG_in12)->isa_int()->get_con();
 jint rshift = phase->type(_JOG_in22)->isa_int()->get_con();
-if ((lshift & 31) == (java_subtract(32, (rshift & 31)))) {
+if ((lshift & 31) == (java_subtract((jint) 32, (rshift & 31)))) {
 return new RotateLeftNode(_JOG_in11, phase->intcon(lshift & 31), TypeInt::INT);
 }
 }
