@@ -800,7 +800,7 @@ if (_JOG_in1->Opcode() == Op_AndI
     && _JOG_in2->Opcode() == Op_ConI) {
 jint c1 = phase->type(_JOG_in12)->isa_int()->get_con();
 jint c0 = phase->type(_JOG_in2)->isa_int()->get_con();
-if (c1 == (java_subtract((1 << (java_subtract(32, c0))), 1))) {
+if (c1 == (java_subtract((1 << (java_subtract((jint) 32, c0))), (jint) 1))) {
 return new LShiftINode(_JOG_in11, _JOG_in2);
 }
 }
