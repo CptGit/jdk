@@ -929,7 +929,7 @@ if (_JOG_in1->Opcode() == Op_URShiftI
     && _JOG_in11 == _JOG_in21) {
 jint rshift = phase->type(_JOG_in12)->isa_int()->get_con();
 jint lshift = phase->type(_JOG_in22)->isa_int()->get_con();
-if ((rshift & 31) == (java_subtract(32, (lshift & 31)))) {
+if ((rshift & 31) == (java_subtract((jint) 32, (lshift & 31)))) {
 return new RotateRightNode(_JOG_in11, phase->intcon(rshift & 31), TypeInt::INT);
 }
 }
