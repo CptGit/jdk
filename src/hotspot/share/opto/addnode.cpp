@@ -33,7 +33,7 @@
 #include "opto/mulnode.hpp"
 #include "opto/phaseX.hpp"
 #include "opto/subnode.hpp"
-
+#include "opto/divnode.hpp"
 // Portions of code courtesy of Clifford Click
 
 // Classic Add functionality.  This covers all the usual 'add' behaviors for
@@ -276,6 +276,30 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
     op1 = op2;
     op2 = in2->Opcode();
   }
+
+  if (in(1)->Opcode() == Op_ModI){
+    if(in(1)->in(2)->Opcode() == Op_ConI){
+      if(in(2)->Opcode() == Op_MulI){
+	if(in(2)->in(1)->Opcode() == Op_ModI){
+	  if(in(2)->in(1)->in(1)->Opcode() == Op_DivI){
+	    if(in(2)->in(1)->in(2)->Opcode() == Op_ConI){
+	      if(in(1)->in(1) == in(2)->in(1)->in(1)->in(1)){
+		if(in(1)->in(2) == in(2)->in(1)->in(1)->in(2)){
+		  if(in(1)->in(2) == in(2)->in(2)) {
+		    jint C0 = phase->type(in(1)->in(2))->isa_int()->get_con();
+		    jint C1 = phase->type(in(2)->in(1)->in(2))->isa_int()->get_con();
+		    return new ModINode(0, in(1)->in(1), phase->intcon(java_multiply(C0, C1)));
+		  }
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  
+  
   if (op1 == Op_Sub(bt)) {
     const Type* t_sub1 = phase->type(in1->in(1));
     const Type* t_2    = phase->type(in2       );
@@ -378,6 +402,7 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
     Node* c_minus_one = phase->makecon(add_ring(phase->type(in(2)), TypeInteger::minus_1(bt)));
     return SubNode::make(c_minus_one, in1->in(1), bt);
   }
+  
   return AddNode::Ideal(phase, can_reshape);
 }
 
