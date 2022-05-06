@@ -45,7 +45,7 @@ public class AddINodeIdealizationTests {
                  "test14", "test15", "test16",
                  "test17", "test18", "test19",
                  "test20", "test21", "test22",
-                 "test23"})
+                 "test23", "test24"})
     public void runMethod() {
         int a = RunInfo.getRandom().nextInt();
         int b = RunInfo.getRandom().nextInt();
@@ -88,6 +88,7 @@ public class AddINodeIdealizationTests {
         Asserts.assertEQ((a - b) + 190    , test21(a, b));
         Asserts.assertEQ((a - b) + 210    , test22(a, b));
         Asserts.assertEQ((a - b) + 190    , test23(a, b));
+	Asserts.assertEQ((a ^ b)          , test24(a, b));
     }
 
     @Test
@@ -292,5 +293,13 @@ public class AddINodeIdealizationTests {
     // where con < 0
     public int test23(int x, int y) {
         return x + (-10 - y) + 200; // transformed to (x - y) + 190;
+    }
+    
+    @Test
+    @IR(counts = {IRNode.XOR_I, "1"})
+    // Checks (x & ~y) + (~x & y) => (x ^ y)
+    // where con < 0
+    public int test24(int x, int y) {
+        return (x & ~y) + (~x & y); // transformed to (x ^ y);
     }
 }

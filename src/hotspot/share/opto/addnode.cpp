@@ -369,6 +369,25 @@ Node* AddNode::IdealIL(PhaseGVN* phase, bool can_reshape, BasicType bt) {
     }
   }
 
+  if(in(1)->Opcode() == Op_AndI){
+    if(in(1)->in(1)->Opcode() == Op_XorI){
+      if(phase->type(in(1)->in(1)->in(2)) == TypeInteger::minus_1(bt)){
+	if(in(2)->Opcode() == Op_AndI){
+	  if(in(2)->in(1)->Opcode() == Op_XorI){
+	    if(phase->type(in(2)->in(1)->in(2)) == TypeInteger::minus_1(bt)){
+	      if(in(1)->in(2) == in(2)->in(1)->in(1)){
+		if(in(1)->in(1)->in(1) == in(2)->in(2)){
+		  return new XorINode(in(1)->in(2), in(2)->in(2));
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  
+
   // Convert (~x+c) into (c-1)-x. Note there isn't a bitwise not
   // bytecode, "~x" would typically represented as "x^(-1)", so (~x+c)
   // will be (x^(-1))+c.
