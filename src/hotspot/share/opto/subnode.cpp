@@ -179,15 +179,23 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
   const Type *t2 = phase->type( in2 );
   if( t2 == Type::TOP ) return NULL;
   /* pSub1 START */
+  {
+    Node *in2 = in(2);
+    const Type *t2 = phase->type( in2 );
   // Convert "x-c0" into "x+ -c0".
   if( t2->base() == Type::Int ){        // Might be bottom or top...
     const TypeInt *i = t2->is_int();
     if( i->is_con() )
       return new AddINode(in1, phase->intcon(-i->get_con()));
   }
+  }
   /* pSub1 END */
 
   /* pSub2 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
   // Convert "(x+c0) - y" into (x-y) + c0"
   // Do not collapse (x+c0)-y if "+" is a loop increment or
   // if "y" is a loop induction variable.
@@ -198,10 +206,15 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
       return new AddINode( sub2, in1->in(2) );
     }
   }
+  }
   /* pSub2 END */
 
 
   /* pSub3 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
   // Convert "x - (y+c0)" into "(x-y) - c0"
   // Need the same check as in above optimization but reversed.
   if (op2 == Op_AddI && ok_to_convert(in2, in1)) {
@@ -213,6 +226,7 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
       Node* neg_c0 = phase->intcon(- tcon->get_con());
       return new AddINode(sub2, neg_c0);
     }
+  }
   }
   /* pSub3 END */
 
@@ -229,73 +243,134 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
 #endif
 
   /* pSubXMinus_XPlusY_ START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
   // Convert "x - (x+y)" into "-y"
   if (op2 == Op_AddI && in1 == in2->in(1)) {
     return new SubINode(phase->intcon(0), in2->in(2));
   }
+  }
   /* pSubXMinus_XPlusY_ END */
   /* pSub_XMinusY_MinusX START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
   // Convert "(x-y) - x" into "-y"
   if (op1 == Op_SubI && in1->in(1) == in2) {
     return new SubINode(phase->intcon(0), in1->in(2));
   }
+  }
   /* pSub_XMinusY_MinusX END */
   /* pSubXMinus_YPlusX_ START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
   // Convert "x - (y+x)" into "-y"
   if (op2 == Op_AddI && in1 == in2->in(2)) {
     return new SubINode(phase->intcon(0), in2->in(1));
   }
+  }
   /* pSubXMinus_YPlusX_ END */
 
   /* pSub7 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
+    const Type *t1 = phase->type( in1 );
   // Convert "0 - (x-y)" into "y-x", leave the double negation "-(-y)" to SubNode::Identity().
   if (t1 == TypeInt::ZERO && op2 == Op_SubI && phase->type(in2->in(1)) != TypeInt::ZERO) {
     return new SubINode(in2->in(2), in2->in(1));
   }
+  }
   /* pSub7 END */
 
   /* pSub8 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
+    const Type *t1 = phase->type( in1 );
   // Convert "0 - (x+con)" into "-con-x"
   jint con;
   if( t1 == TypeInt::ZERO && op2 == Op_AddI &&
       (con = in2->in(2)->find_int_con(0)) != 0 )
     return new SubINode( phase->intcon(-con), in2->in(1) );
+  }
   /* pSub8 END */
 
   /* pSub9 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
+    uint op2 = in2->Opcode();
   // Convert "(X+A) - (X+B)" into "A - B"
   if( op1 == Op_AddI && op2 == Op_AddI && in1->in(1) == in2->in(1) )
     return new SubINode( in1->in(2), in2->in(2) );
+  }
   /* pSub9 END */
 
   /* pSub10 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
+    uint op2 = in2->Opcode();
   // Convert "(A+X) - (B+X)" into "A - B"
   if( op1 == Op_AddI && op2 == Op_AddI && in1->in(2) == in2->in(2) )
     return new SubINode( in1->in(1), in2->in(1) );
+  }
   /* pSub10 END */
 
   /* pSub11 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
+    uint op2 = in2->Opcode();
   // Convert "(A+X) - (X+B)" into "A - B"
   if( op1 == Op_AddI && op2 == Op_AddI && in1->in(2) == in2->in(1) )
     return new SubINode( in1->in(1), in2->in(2) );
+  }
   /* pSub11 END */
 
   /* pSub12 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
+    uint op2 = in2->Opcode();
   // Convert "(X+A) - (B+X)" into "A - B"
   if( op1 == Op_AddI && op2 == Op_AddI && in1->in(1) == in2->in(2) )
     return new SubINode( in1->in(2), in2->in(1) );
+  }
   /* pSub12 END */
 
   /* pSub13 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
   // Convert "A-(B-C)" into (A+C)-B", since add is commutative and generally
   // nicer to optimize than subtract.
   if( op2 == Op_SubI && in2->outcnt() == 1) {
     Node *add1 = phase->transform( new AddINode( in1, in2->in(2) ) );
     return new SubINode( add1, in2->in(1) );
   }
+  }
   /* pSub13 END */
 
   /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op1 = in1->Opcode();
+    uint op2 = in2->Opcode();
   // Associative
   if (op1 == Op_MulI && op2 == Op_MulI) {
     Node* sub_in1 = NULL;
@@ -329,9 +404,14 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
       return new MulINode(mul_in, sub);
     }
   }
+  }
   /* pSubAssociative1_pSubAssociative2_pSubAssociative3_pSubAssociative4 END */
 
   /* pSubNegRShiftToURShift START */
+  {
+    Node *in1 = in(1);
+    Node *in2 = in(2);
+    uint op2 = in2->Opcode();
   // Convert "0-(A>>31)" into "(A>>>31)"
   if ( op2 == Op_RShiftI ) {
     Node *in21 = in2->in(1);
@@ -342,6 +422,7 @@ Node *SubINode::Ideal(PhaseGVN *phase, bool can_reshape){
     if ( t21 && t22 && zero == TypeInt::ZERO && t22->is_con(31) ) {
       return new URShiftINode(in21, in22);
     }
+  }
   }
   /* pSubNegRShiftToURShift END */
 

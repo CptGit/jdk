@@ -280,10 +280,25 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     const Type *t_sub1 = phase->type( in1->in(1) );
     const Type *t_2    = phase->type( in2        );
     /* pAdd1 START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      if( op1 == Op_SubI ) {
+      const Type *t_sub1 = phase->type( in1->in(1) );
+      const Type *t_2    = phase->type( in2        );
     if( t_sub1->singleton() && t_2->singleton() && t_sub1 != Type::TOP && t_2 != Type::TOP )
       return new SubINode(phase->makecon( add_ring( t_sub1, t_2 ) ), in1->in(2) );
+      }
+    }
     /* pAdd1 END */
     /* pAdd2 START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      int op2 = in2->Opcode();
+      if( op1 == Op_SubI ) {
     // Convert "(a-b)+(c-d)" into "(a+c)-(b+d)"
     if( op2 == Op_SubI ) {
       // Check for dead cycle: d = (a-b)+(c-d)
@@ -294,50 +309,99 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       sub->init_req(2, phase->transform(new AddINode(in1->in(2), in2->in(2) ) ));
       return sub;
     }
+      }
+    }
     /* pAdd2 END */
     /* pAdd3_pAdd3Sym START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      int op2 = in2->Opcode();
+      if( op1 == Op_SubI ) {
     // Convert "(a-b)+(b+c)" into "(a+c)"
     if( op2 == Op_AddI && in1->in(2) == in2->in(1) ) {
       assert(in1->in(1) != this && in2->in(2) != this,"dead loop in AddINode::Ideal");
       return new AddINode(in1->in(1), in2->in(2));
     }
+      }
+    }
     /* pAdd3_pAdd3Sym END */
     /* pAdd4_pAdd4Sym START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      int op2 = in2->Opcode();
+      if( op1 == Op_SubI ) {
     // Convert "(a-b)+(c+b)" into "(a+c)"
     if( op2 == Op_AddI && in1->in(2) == in2->in(2) ) {
       assert(in1->in(1) != this && in2->in(1) != this,"dead loop in AddINode::Ideal");
       return new AddINode(in1->in(1), in2->in(1));
     }
+      }
+    }
     /* pAdd4_pAdd4Sym END */
     /* pAdd5 START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      int op2 = in2->Opcode();
+      if( op1 == Op_SubI ) {
     // Convert "(a-b)+(b-c)" into "(a-c)"
     if( op2 == Op_SubI && in1->in(2) == in2->in(1) ) {
       assert(in1->in(1) != this && in2->in(2) != this,"dead loop in AddINode::Ideal");
       return new SubINode(in1->in(1), in2->in(2));
     }
+      }
+    }
     /* pAdd5 END */
     /* pAdd6 START */
+    {
+      Node* in1 = in(1);
+      Node* in2 = in(2);
+      int op1 = in1->Opcode();
+      int op2 = in2->Opcode();
+      if( op1 == Op_SubI ) {
     // Convert "(a-b)+(c-a)" into "(c-b)"
     if( op2 == Op_SubI && in1->in(1) == in2->in(2) ) {
       assert(in1->in(2) != this && in2->in(1) != this,"dead loop in AddINode::Ideal");
       return new SubINode(in2->in(1), in1->in(2));
     }
+      }
+    }
     /* pAdd6 END */
   }
 
   /* pAdd7 START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op2 = in2->Opcode();
   // Convert "x+(0-y)" into "(x-y)"
   if( op2 == Op_SubI && phase->type(in2->in(1)) == TypeInt::ZERO )
     return new SubINode(in1, in2->in(2) );
+  }
   /* pAdd7 END */
 
   /* pAdd8 START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op1 = in1->Opcode();
   // Convert "(0-y)+x" into "(x-y)"
   if( op1 == Op_SubI && phase->type(in1->in(1)) == TypeInt::ZERO )
     return new SubINode( in2, in1->in(2) );
+  }
   /* pAdd8 END */
 
   /* pAddAssociative1_pAddAssociative2_pAddAssociative3_pAddAssociative4 START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op1 = in1->Opcode();
+    int op2 = in2->Opcode();
   // Associative
   if (op1 == Op_MulI && op2 == Op_MulI) {
     Node* add_in1 = NULL;
@@ -371,9 +435,15 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return new MulINode(mul_in, add);
     }
   }
+  }
   /* pAddAssociative1_pAddAssociative2_pAddAssociative3_pAddAssociative4 END */
 
   /* pAdd9 START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op1 = in1->Opcode();
+    int op2 = in2->Opcode();
   // Convert (x>>>z)+y into (x+(y<<z))>>>z for small constant z and y.
   // Helps with array allocation math constant folding
   // See 4790063:
@@ -398,9 +468,15 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       }
     }
   }
+  }
   /* pAdd9 END */
 
   /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op1 = in1->Opcode();
+    int op2 = in2->Opcode();
   // Convert (x >>> rshift) + (x << lshift) into RotateRight(x, rshift)
   if (Matcher::match_rule_supported(Op_RotateRight) &&
       ((op1 == Op_URShiftI && op2 == Op_LShiftI) || (op1 == Op_LShiftI && op2 == Op_URShiftI)) &&
@@ -417,15 +493,21 @@ Node *AddINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       }
     }
   }
+  }
   /* pAddURShiftThenLShiftToRRotation_pAddURShiftThenLShiftToRRotationSym END */
 
   /* pAddNotXPlusOne START */
+  {
+    Node* in1 = in(1);
+    Node* in2 = in(2);
+    int op1 = in1->Opcode();
   // Convert (~x+1) into -x. Note there isn't a bitwise not bytecode,
   // "~x" would typically represented as "x^(-1)", so (~x+1) will
   // be (x^(-1))+1.
   if (op1 == Op_XorI && phase->type(in2) == TypeInt::ONE &&
       phase->type(in1->in(2)) == TypeInt::MINUS_1) {
     return new SubINode(phase->makecon(TypeInt::ZERO), in1->in(1));
+  }
   }
   /* pAddNotXPlusOne END */
   return AddNode::Ideal(phase, can_reshape);
@@ -903,6 +985,9 @@ Node* OrINode::Ideal(PhaseGVN* phase, bool can_reshape) {
   int lopcode = in(1)->Opcode();
   int ropcode = in(2)->Opcode();
   /* p_XLShiftC1_Or_XURShiftC2__p_XLShiftS_Or_XURShift_ConMinusS__ START */
+  {
+    int lopcode = in(1)->Opcode();
+    int ropcode = in(2)->Opcode();
   if (Matcher::match_rule_supported(Op_RotateLeft) &&
       lopcode == Op_LShiftI && ropcode == Op_URShiftI && in(1)->in(1) == in(2)->in(1)) {
     Node* lshift = in(1)->in(2);
@@ -913,8 +998,12 @@ Node* OrINode::Ideal(PhaseGVN* phase, bool can_reshape) {
     }
     return NULL;
   }
+  }
   /* p_XLShiftC1_Or_XURShiftC2__p_XLShiftS_Or_XURShift_ConMinusS__ END */
   /* p_XURShiftC1_Or_XLShiftC2__p_XURShiftS_Or_XLShift_ConMinusS__ START */
+  {
+    int lopcode = in(1)->Opcode();
+    int ropcode = in(2)->Opcode();
   if (Matcher::match_rule_supported(Op_RotateRight) &&
       lopcode == Op_URShiftI && ropcode == Op_LShiftI && in(1)->in(1) == in(2)->in(1)) {
     Node* rshift = in(1)->in(2);
@@ -923,6 +1012,7 @@ Node* OrINode::Ideal(PhaseGVN* phase, bool can_reshape) {
     if (shift != NULL) {
       return new RotateRightNode(in(1)->in(1), shift, TypeInt::INT);
     }
+  }
   }
   /* p_XURShiftC1_Or_XLShiftC2__p_XURShiftS_Or_XLShift_ConMinusS__ END */
   return NULL;
@@ -1225,6 +1315,9 @@ Node *MinINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   Node *l = in(1);
   Node *r = in(2);
   /* pMinAssociative START */
+  {
+    Node *l = in(1);
+    Node *r = in(2);
   // Transform  MinI1( MinI2(a,b), c)  into  MinI1( a, MinI2(b,c) )
   // to force a right-spline graph for the rest of MinINode::Ideal().
   if( l->Opcode() == Op_MinI ) {
@@ -1234,6 +1327,7 @@ Node *MinINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     set_req_X(1, l, phase);
     set_req_X(2, r, phase);
     return this;
+  }
   }
   /* pMinAssociative END */
 

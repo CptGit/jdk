@@ -579,12 +579,17 @@ Node *AndINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
 
   /* p_NegX_AndMinus1 START */
+  {
+    const int mask = t2->get_con();
+    Node *load = in(1);
+    uint lop = load->Opcode();
   // Check for 'negate/and-1', a pattern emitted when someone asks for
   // 'mod 2'.  Negate leaves the low order bit unchanged (think: complement
   // plus 1) and the mask is of the low order bit.  Skip the negate.
   if( lop == Op_SubI && mask == 1 && load->in(1) &&
       phase->type(load->in(1)) == TypeInt::ZERO )
     return new AndINode( load->in(2), in(2) );
+  }
   /* p_NegX_AndMinus1 END */
 
   return MulNode::Ideal(phase, can_reshape);
@@ -752,6 +757,10 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   Node *add1 = in(1);
   int add1_op = add1->Opcode();
   /* p_XPlusCon1_LShiftCon0 START */
+  {
+    int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+    Node *add1 = in(1);
+    int add1_op = add1->Opcode();
   if( add1_op == Op_AddI ) {    // Left input is an add?
     assert( add1 != add1->in(1), "dead loop in LShiftINode::Ideal" );
     const TypeInt *t12 = phase->type(add1->in(2))->isa_int();
@@ -766,17 +775,25 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       }
     }
   }
+  }
   /* p_XPlusCon1_LShiftCon0 END */
 
   /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 START */
+  {
+    Node *add1 = in(1);
+    int add1_op = add1->Opcode();
   // Check for "(x>>c0)<<c0" which just masks off low bits
   if( (add1_op == Op_RShiftI || add1_op == Op_URShiftI ) &&
       add1->in(2) == in(2) )
     // Convert to "(x & -(1<<c0))"
     return new AndINode(add1->in(1),phase->intcon( -(1<<con)));
+  }
   /* p_XRShiftC0_LShiftC0_p_XURShiftC0_LShiftC0 END */
 
   /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 START */
+  {
+    Node *add1 = in(1);
+    int add1_op = add1->Opcode();
   // Check for "((x>>c0) & Y)<<c0" which just masks off more low bits
   if( add1_op == Op_AndI ) {
     Node *add2 = add1->in(1);
@@ -788,15 +805,21 @@ Node *LShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return new AndINode( add2->in(1), y_sh );
     }
   }
+  }
   /* p__XRShiftC0_AndY_LShiftC0_p__XURShiftC0_AndY_LShiftC0 END */
 
   /* p_XAndRightNBits_LShiftC0 START */
+  {
+    int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+    Node *add1 = in(1);
+    int add1_op = add1->Opcode();
   // Check for ((x & ((1<<(32-c0))-1)) << c0) which ANDs off high bits
   // before shifting them away.
   const jint bits_mask = right_n_bits(BitsPerJavaInteger-con);
   if( add1_op == Op_AndI &&
       phase->type(add1->in(2)) == TypeInt::make( bits_mask ) )
     return new LShiftINode( add1->in(1), in(2) );
+  }
   /* p_XAndRightNBits_LShiftC0 END */
 
   return NULL;
@@ -1001,6 +1024,9 @@ Node *RShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   }
 
   /* p_XAndC0_RShiftC1 START */
+  {
+    const TypeInt *t3;  // type of in(1).in(2)
+    int shift = maskShiftAmount(phase, this, BitsPerJavaInteger);
   // Check for (x & 0xFF000000) >> 24, whose mask can be made smaller.
   // Such expressions arise normally from shift chains like (byte)(x >> 24).
   const Node *mask = in(1);
@@ -1012,6 +1038,7 @@ Node *RShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     // Convert to "(x >> shift) & (mask >> shift)"
     Node *shr_nomask = phase->transform( new RShiftINode(mask->in(1), in(2)) );
     return new AndINode(shr_nomask, phase->intcon( maskbits >> shift));
+  }
   }
   /* p_XAndC0_RShiftC1 END */
 
@@ -1216,6 +1243,9 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   int in1_op = in(1)->Opcode();
 
   /* p_XURShiftA_URShiftB START */
+  {
+      int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+      int in1_op = in(1)->Opcode();
   // Check for ((x>>>a)>>>b) and replace with (x>>>(a+b)) when a+b < 32
   if( in1_op == Op_URShiftI ) {
     const TypeInt *t12 = phase->type( in(1)->in(2) )->isa_int();
@@ -1227,6 +1257,7 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
         return new URShiftINode( in(1)->in(1), phase->intcon(con3) );
     }
   }
+  }
   /* p_XURShiftA_URShiftB END */
 
   // Check for ((x << z) + Y) >>> z.  Replace with x + con>>>z
@@ -1236,6 +1267,12 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
   Node *add = in(1);
   const TypeInt *t2 = phase->type(in(2))->isa_int();
   /* p__XLShiftZ_PlusY_URShiftZ START */
+  {
+    int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+    const int mask = right_n_bits(BitsPerJavaInteger - con);
+    int in1_op = in(1)->Opcode();
+    Node *add = in(1);
+    const TypeInt *t2 = phase->type(in(2))->isa_int();
   if (in1_op == Op_AddI) {
     Node *lshl = add->in(1);
     if( lshl->Opcode() == Op_LShiftI &&
@@ -1245,9 +1282,13 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return new AndINode( sum, phase->intcon(mask) );
     }
   }
+  }
   /* p__XLShiftZ_PlusY_URShiftZ END */
 
   /* p_XAndMask_URShiftZ START */
+  {
+    int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+    int in1_op = in(1)->Opcode();
   // Check for (x & mask) >>> z.  Replace with (x >>> z) & (mask >>> z)
   // This shortens the mask.  Also, if we are extracting a high byte and
   // storing it to a buffer, the mask will be removed completely.
@@ -1265,17 +1306,25 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
       // ((x >> 4) & 0x0FFFFFFF).  The difference is greatest in LP64.
     }
   }
+  }
   /* p_XAndMask_URShiftZ END */
 
   /* p_XLShiftZ_URShiftZ START */
+  {
+    int con = maskShiftAmount(phase, this, BitsPerJavaInteger);
+    const int mask = right_n_bits(BitsPerJavaInteger - con);
+    int in1_op = in(1)->Opcode();
   // Check for "(X << z ) >>> z" which simply zero-extends
   Node *shl = in(1);
   if( in1_op == Op_LShiftI &&
       phase->type(shl->in(2)) == t2 )
     return new AndINode( shl->in(1), phase->intcon(mask) );
+  }
   /* p_XLShiftZ_URShiftZ END */
 
   /* p_XRShiftN_URShift31 START */
+  {
+    int in1_op = in(1)->Opcode();
   // Check for (x >> n) >>> 31. Replace with (x >>> 31)
   Node *shr = in(1);
   if ( in1_op == Op_RShiftI ) {
@@ -1286,6 +1335,7 @@ Node *URShiftINode::Ideal(PhaseGVN *phase, bool can_reshape) {
     if ( t11 && t2 && t2->is_con(31) && t12 && t12->is_con() ) {
       return new URShiftINode(in11, phase->intcon(31));
     }
+  }
   }
   /* p_XRShiftN_URShift31 END */
 
