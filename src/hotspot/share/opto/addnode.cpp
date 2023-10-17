@@ -471,14 +471,27 @@ Node *AddLNode::Ideal(PhaseGVN *phase, bool can_reshape) {
     if( t_sub1->singleton() && t_2->singleton() && t_sub1 != Type::TOP && t_2 != Type::TOP )
       return new SubLNode(phase->makecon( add_ring( t_sub1, t_2 ) ), in1->in(2) );
     // Convert "(a-b)+(c-d)" into "(a+c)-(b+d)"
-    if( op2 == Op_SubL ) {
-      // Check for dead cycle: d = (a-b)+(c-d)
-      assert( in1->in(2) != this && in2->in(2) != this,
-              "dead loop in AddLNode::Ideal" );
-      Node *sub  = new SubLNode(NULL, NULL);
-      sub->init_req(1, phase->transform(new AddLNode(in1->in(1), in2->in(1) ) ));
-      sub->init_req(2, phase->transform(new AddLNode(in1->in(2), in2->in(2) ) ));
-      return sub;
+    // if( op2 == Op_SubL ) {
+    //   // Check for dead cycle: d = (a-b)+(c-d)
+    //   assert( in1->in(2) != this && in2->in(2) != this,
+    //           "dead loop in AddLNode::Ideal" );
+    //   Node *sub  = new SubLNode(NULL, NULL);
+    //   sub->init_req(1, phase->transform(new AddLNode(in1->in(1), in2->in(1) ) ));
+    //   sub->init_req(2, phase->transform(new AddLNode(in1->in(2), in2->in(2) ) ));
+    //   return sub;
+    // }
+    // ADD2
+    {
+      Node* _JOG_in1 = in(1);
+      Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+      Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+      Node* _JOG_in2 = in(2);
+      Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+      Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+      if (_JOG_in1->Opcode() == Op_SubL
+    	  && _JOG_in2->Opcode() == Op_SubL) {
+    	return new SubLNode(phase->transform(new AddLNode(_JOG_in11, _JOG_in21)), phase->transform(new AddLNode(_JOG_in12, _JOG_in22)));
+      }
     }
     // Convert "(a-b)+(b+c)" into "(a+c)"
     if( op2 == Op_AddL && in1->in(2) == in2->in(1) ) {
@@ -491,9 +504,23 @@ Node *AddLNode::Ideal(PhaseGVN *phase, bool can_reshape) {
       return new AddLNode(in1->in(1), in2->in(1));
     }
     // Convert "(a-b)+(b-c)" into "(a-c)"
-    if( op2 == Op_SubL && in1->in(2) == in2->in(1) ) {
-      assert(in1->in(1) != this && in2->in(2) != this,"dead loop in AddLNode::Ideal");
-      return new SubLNode(in1->in(1), in2->in(2));
+    // if( op2 == Op_SubL && in1->in(2) == in2->in(1) ) {
+    //   assert(in1->in(1) != this && in2->in(2) != this,"dead loop in AddLNode::Ideal");
+    //   return new SubLNode(in1->in(1), in2->in(2));
+    // }
+    // ADD7
+    {
+      Node* _JOG_in1 = in(1);
+      Node* _JOG_in11 = _JOG_in1 != NULL && 1 < _JOG_in1->req() ? _JOG_in1->in(1) : NULL;
+      Node* _JOG_in12 = _JOG_in1 != NULL && 2 < _JOG_in1->req() ? _JOG_in1->in(2) : NULL;
+      Node* _JOG_in2 = in(2);
+      Node* _JOG_in21 = _JOG_in2 != NULL && 1 < _JOG_in2->req() ? _JOG_in2->in(1) : NULL;
+      Node* _JOG_in22 = _JOG_in2 != NULL && 2 < _JOG_in2->req() ? _JOG_in2->in(2) : NULL;
+      if (_JOG_in1->Opcode() == Op_SubL
+	  && _JOG_in2->Opcode() == Op_SubL
+	  && _JOG_in12 == _JOG_in21) {
+	return new SubLNode(_JOG_in11, _JOG_in22);
+      }
     }
     // Convert "(a-b)+(c-a)" into "(c-b)"
     if( op2 == Op_SubL && in1->in(1) == in2->in(2) ) {
